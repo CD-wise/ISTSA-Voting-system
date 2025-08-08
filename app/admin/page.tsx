@@ -96,18 +96,6 @@ export default function AdminLoginPage() {
               {loading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-xs text-gray-600">
-                <strong>Test Credentials:</strong>
-                <br />
-                Username: admin
-                <br />
-                Password: admin123
-              </p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
