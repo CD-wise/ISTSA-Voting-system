@@ -45,8 +45,8 @@ export default function AdminLoginPage() {
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto w-20 h-20 bg-white rounded-full flex items-center justify-center p-2">
             <Image
-              src="/images/compssa-logo.png"
-              alt="COMPSSA & Accra Technical University Logo"
+              src="/images/ISTSA-logo.png"
+              alt="ISTSA & Accra Technical University Logo"
               width={64}
               height={64}
               className="object-contain"
@@ -54,7 +54,7 @@ export default function AdminLoginPage() {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-gray-900">Admin Access</CardTitle>
-            <CardDescription className="text-gray-600 mt-2">COMPSSA Voting System Administration</CardDescription>
+            <CardDescription className="text-gray-600 mt-2">ISTSA Voting System Administration</CardDescription>
             <CardDescription className="text-sm text-gray-500 mt-1">Accra Technical University</CardDescription>
           </div>
         </CardHeader>

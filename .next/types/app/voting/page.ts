@@ -1,4 +1,4 @@
-// File: C:\Users\Francis\Downloads\csmodify (1)\app\voting\page.tsx
+// File: C:\Users\Francis\Downloads\itmodify\app\voting\page.tsx
 import * as entry from '../../../../app/voting/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

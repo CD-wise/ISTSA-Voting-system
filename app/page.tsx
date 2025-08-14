@@ -190,7 +190,7 @@ export default function WelcomePage() {
   const getStepTitle = () => {
     switch (currentStep) {
       case "id-verification":
-        return "COMPSSA Voting System"
+        return "ISTSA Voting System"
       case "phone-verification":
         return "Phone Verification"
       case "sms-otp":
@@ -198,14 +198,14 @@ export default function WelcomePage() {
       case "success":
         return "Verification Complete"
       default:
-        return "COMPSSA Voting System"
+        return "ISTSA Voting System"
     }
   }
 
   const getStepDescription = () => {
     switch (currentStep) {
       case "id-verification":
-        return "Computer Science Students Association Elections"
+        return "Information Systems & Technology Association Elections"
       case "phone-verification":
         return "Enter your complete phone number to receive SMS verification"
       case "sms-otp":
@@ -213,7 +213,7 @@ export default function WelcomePage() {
       case "success":
         return "You have been successfully verified. Redirecting..."
       default:
-        return "Computer Science Students Association Elections"
+        return "Information Systems & Technology Association Elections"
     }
   }
 
@@ -225,8 +225,8 @@ export default function WelcomePage() {
             <CardHeader className="text-center space-y-4">
               <div className="mx-auto w-32 h-32 flex items-center justify-center">
                 <Image
-                  src="/images/compssa-logo.png"
-                  alt="COMPSSA & Accra Technical University Logo"
+                  src="/images/ISTSA-logo.png"
+                  alt="ISTSA & Accra Technical University Logo"
                   width={128}
                   height={128}
                   className="object-contain"

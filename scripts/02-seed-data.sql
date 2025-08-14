@@ -12,7 +12,7 @@ INSERT INTO voting_categories (name, display_order) VALUES
 -- Insert comprehensive sample student IDs for testing
 -- Format: YYXXXNNNL where YY=year, XXX=program code, NNN=sequence, L=level indicator
 INSERT INTO students (student_id) VALUES
--- Computer Science Students (CS = 200)
+-- Information Systems & Technology (CS = 200)
 ('22200001d'), -- 2022 intake, CS, student 001, level indicator d
 ('22200002d'),
 ('22200003d'),

@@ -217,8 +217,8 @@ export default function StudentDetailsPage() {
           <CardHeader className="text-center space-y-4">
             <div className="mx-auto w-32 h-32 flex items-center justify-center">
               <Image
-                src="/images/compssa-logo.png"
-                alt="COMPSSA & Accra Technical University Logo"
+                src="/images/ISTSA-logo.png"
+                alt="ISTSA & Accra Technical University Logo"
                 width={128}
                 height={128}
                 className="object-contain"

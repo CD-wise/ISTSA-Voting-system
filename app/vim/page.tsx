@@ -158,15 +158,15 @@ export default function VimVoting() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Image
-                src="/images/compssa-logo.png"
-                alt="COMPSSA Logo"
+                src="/images/ISTSA-logo.png"
+                alt="ISTSA Logo"
                 width={60}
                 height={60}
                 className="rounded-full"
               />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">VIM Voting</h1>
-                <p className="text-sm text-gray-600">Computer Science Students Association</p>
+                <p className="text-sm text-gray-600">Information Systems & Technology Association</p>
               </div>
             </div>
             <Button onClick={() => router.push("/")} variant="outline">

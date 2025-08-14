@@ -95,7 +95,7 @@ export default function ConfirmationPage() {
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-sm text-blue-800">
                   <strong>Important:</strong> Your votes are confidential and cannot be changed. Thank you for
-                  participating in the COMPSSA elections.
+                  participating in the ISTSA elections.
                 </p>
               </div>
 
@@ -108,14 +108,14 @@ export default function ConfirmationPage() {
             <div className="text-center space-y-3">
               <div className="flex justify-center">
                 <Image
-                  src="/images/compssa-logo.png"
-                  alt="COMPSSA & Accra Technical University Logo"
+                  src="/images/ISTSA-logo.png"
+                  alt="ISTSA & Accra Technical University Logo"
                   width={80}
                   height={80}
                   className="object-contain opacity-60"
                 />
               </div>
-              <p className="text-xs text-gray-500">COMPSSA Voting System © 2025</p>
+              <p className="text-xs text-gray-500">ISTSA Voting System © 2025</p>
               <p className="text-xs text-gray-400">Accra Technical University</p>
             </div>
           </CardContent>
