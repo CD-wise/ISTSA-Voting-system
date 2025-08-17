@@ -333,60 +333,33 @@ export default function AdminDashboard() {
     }
   }
 
-  const generateVotingSummaryCSV = () => {
-    if (transformedStudentData.length === 0) {
-      alert("No voting data available for export")
+  // Replace the generateVotingSummaryCSV function in your dashboard component with this:
+
+const generateVotingSummaryCSV = async () => {
+  try {
+    // Use the server action to get CSV data
+    const result = await import("@/lib/admin-actions").then(mod => mod.generateVotingSummaryCSV())
+
+    if (!result.success) {
+      alert(result.message || "Failed to generate CSV")
       return
     }
 
-    // Get all category names
-    const categoryColumns = [
-      "Presidential",
-      "Vice President",
-      "Financial Secretary",
-      "General Secretary",
-      "General Organizers",
-      "WOCOM",
-      "PRO",
-      "Project Officer",
-    ]
-
-    // Create CSV header
-    const headers = ["Student ID", "Name", "Phone", "Email", "Programme", "Level", ...categoryColumns]
-
-    // Create CSV rows - only for students who have voted
-    const csvRows = [
-      headers.join(","),
-      ...transformedStudentData.map((student) => {
-        const baseInfo = [
-          student.student_id,
-          `"${student.student_name || ""}"`,
-          student.phone || "",
-          student.email || "",
-          `"${student.programme || ""}"`,
-          student.level || "",
-        ]
-
-        // Add vote data for each category
-        const voteData = categoryColumns.map((category) => {
-          const categoryKey = category.toLowerCase().replace(/\s+/g, "_").replace("-", "_")
-          return `"${student[categoryKey] || student.votes?.[category] || "No Vote"}"`
-        })
-
-        return [...baseInfo, ...voteData].join(",")
-      }),
-    ]
-
-    const csvContent = csvRows.join("\n")
-
+    // Create and download the CSV file
     const element = document.createElement("a")
-    const file = new Blob([csvContent], { type: "text/csv" })
+    const file = new Blob([result.csvContent ?? ""], { type: "text/csv" })
     element.href = URL.createObjectURL(file)
-    element.download = `voting_summary_${new Date().toISOString().split("T")[0]}.csv`
+    element.download = result.filename ?? "voting_summary.csv"
     document.body.appendChild(element)
     element.click()
     document.body.removeChild(element)
+    
+    console.log(`CSV generated successfully with ${result.recordCount} records`)
+  } catch (error) {
+    console.error("Error generating CSV:", error)
+    alert("Error generating CSV. Please try again.")
   }
+}
 
   if (initialLoading) {
     return (

@@ -64,41 +64,27 @@ export async function setVotingStatus(isOpen: boolean) {
 
 export async function getDashboardStats() {
   try {
-    // Get total students count (remove any default limits)
-    const { count: totalStudents, error: studentsCountError } = await supabase
+    // Get total students count
+    const { data: allStudents, error: studentsError } = await supabase
       .from("students")
-      .select("*", { count: "exact", head: true })
+      .select("student_id, has_voted")
 
-    if (studentsCountError) {
-      console.error("Error counting students:", studentsCountError)
-    }
-
-    // Get voted students count
-    const { count: votedStudents, error: votedCountError } = await supabase
-      .from("students")
-      .select("*", { count: "exact", head: true })
-      .eq("has_voted", true)
-
-    if (votedCountError) {
-      console.error("Error counting voted students:", votedCountError)
-    }
-
-    // Alternative method if count doesn't work - fetch all and count
-    let totalStudentsCount = totalStudents || 0
-    let votedStudentsCount = votedStudents || 0
-
-    if (totalStudentsCount === 0) {
-      const { data: allStudents, error: allStudentsError } = await supabase
-        .from("students")
-        .select("student_id, has_voted")
-
-      if (!allStudentsError && allStudents) {
-        totalStudentsCount = allStudents.length
-        votedStudentsCount = allStudents.filter(s => s.has_voted === true).length
+    if (studentsError) {
+      console.error("Error fetching students:", studentsError)
+      return {
+        totalStudents: 0,
+        votedStudents: 0,
+        turnoutPercentage: 0,
+        votingStats: [],
+        categoryTotals: {},
       }
     }
 
-    // Get voting statistics from your voting_statistics view/table
+    const totalStudents = allStudents?.length || 0
+    const votedStudents = allStudents?.filter(s => s.has_voted === true).length || 0
+    const turnoutPercentage = totalStudents > 0 ? Math.round((votedStudents / totalStudents) * 100) : 0
+
+    // Get voting statistics from your voting_statistics view
     const { data: votingStats, error: votingStatsError } = await supabase
       .from("voting_statistics")
       .select("*")
@@ -108,36 +94,22 @@ export async function getDashboardStats() {
     }
 
     // Get category-wise vote counts
-    const { data: categoryStats, error: categoryStatsError } = await supabase
-      .from("voting_statistics")
-      .select("category_name, vote_count")
-
-    if (categoryStatsError) {
-      console.error("Error fetching category stats:", categoryStatsError)
-    }
-
-    // Calculate category totals
-    const categoryTotals = categoryStats?.reduce(
+    const categoryTotals = votingStats?.reduce(
       (acc: Record<string, number>, curr: { category_name: string; vote_count: number }) => {
         acc[curr.category_name] = (acc[curr.category_name] || 0) + curr.vote_count
         return acc
       }, {}
     ) || {}
 
-    // Calculate turnout percentage
-    const turnoutPercentage = totalStudentsCount > 0 
-      ? Math.round((votedStudentsCount / totalStudentsCount) * 100) 
-      : 0
-
     console.log("Dashboard Stats:", {
-      totalStudents: totalStudentsCount,
-      votedStudents: votedStudentsCount,
+      totalStudents,
+      votedStudents,
       turnoutPercentage
     })
 
     return {
-      totalStudents: totalStudentsCount,
-      votedStudents: votedStudentsCount,
+      totalStudents,
+      votedStudents,
       turnoutPercentage,
       votingStats: votingStats || [],
       categoryTotals,
@@ -285,104 +257,59 @@ export async function getStudentVotingDetails() {
 
 export async function getTransformedStudentData() {
   try {
-    // Get all students who have voted
-    const { data: votedStudents, error: studentsError } = await supabase
-      .from("students")
+    // Use the new voting summary view
+    const { data: votingSummary, error: summaryError } = await supabase
+      .from("voted_students_summary")
       .select("*")
-      .eq("has_voted", true)
+      .order("student_id")
 
-    if (studentsError) {
-      console.error("Error fetching students:", studentsError)
+    if (summaryError) {
+      console.error("Error fetching voting summary:", summaryError)
       return []
     }
 
-    if (!votedStudents || votedStudents.length === 0) {
+    if (!votingSummary || votingSummary.length === 0) {
+      console.log("No students have voted yet")
       return []
     }
 
-    // Get all voting categories
-    const { data: categories, error: categoriesError } = await supabase
-      .from("voting_categories")
-      .select("id, name")
-      .order("display_order")
+    console.log(`Found ${votingSummary.length} students who have voted`)
 
-    if (categoriesError) {
-      console.error("Error fetching categories:", categoriesError)
-      return []
-    }
-
-    // Get all candidates
-    const { data: candidates, error: candidatesError } = await supabase
-      .from("candidates")
-      .select("id, name, category_id")
-
-    if (candidatesError) {
-      console.error("Error fetching candidates:", candidatesError)
-      return []
-    }
-
-    // Get all votes
-    const { data: votes, error: votesError } = await supabase
-      .from("votes")
-      .select("student_id, candidate_id, category_id")
-
-    if (votesError) {
-      console.error("Error fetching votes:", votesError)
-      return []
-    }
-
-    // Create candidate lookup map
-    const candidateMap = new Map()
-    candidates?.forEach(candidate => {
-      candidateMap.set(candidate.id, candidate.name)
-    })
-
-    // Create category lookup map
-    const categoryMap = new Map()
-    categories?.forEach(category => {
-      categoryMap.set(category.id, category.name)
-    })
-
-    // Transform the data
-    const transformedData = votedStudents.map(student => {
-      const studentVotes = votes?.filter(vote => vote.student_id === student.student_id) || []
-      
-      // Create votes object for this student
-      const votesByCategory: Record<string, string> = {}
-      
-      studentVotes.forEach(vote => {
-        const categoryName = categoryMap.get(vote.category_id)
-        const candidateName = candidateMap.get(vote.candidate_id)
-        
-        if (categoryName && candidateName) {
-          votesByCategory[categoryName] = candidateName
-        }
-      })
-
-      // Add individual category fields for backward compatibility
-      const result: any = {
-        student_id: student.student_id,
-        student_name: student.name || student.full_name,
-        phone: student.phone,
-        email: student.email,
-        programme: student.programme,
-        level: student.level,
-        votes: votesByCategory
+    // Transform the data to match the expected format
+    const transformedData = votingSummary.map(student => {
+      // Create votes object for backward compatibility
+      const votes: Record<string, string> = {
+        'Presidential': student.presidential || 'No Vote',
+        'Vice President': student.vice_president || 'No Vote',
+        'Financial Secretary': student.financial_secretary || 'No Vote',
+        'General Secretary': student.general_secretary || 'No Vote',
+        'General Organizers': student.general_organizers || 'No Vote',
+        'WOCOM': student.wocom || 'No Vote',
+        'PRO': student.pro || 'No Vote',
+        'Project Officer': student.project_officer || 'No Vote'
       }
 
-      // Add individual category fields (convert to snake_case for consistency)
-      categories?.forEach(category => {
-        const categoryKey = category.name.toLowerCase()
-          .replace(/\s+/g, '_')
-          .replace(/-/g, '_')
-          .replace(/\./g, '')
-        
-        result[categoryKey] = votesByCategory[category.name] || "No Vote"
-      })
-
-      return result
+      return {
+        student_id: student.student_id,
+        student_name: student.student_name || "N/A",
+        phone: student.phone || "N/A", 
+        email: student.email || "N/A",
+        programme: student.programme || "N/A",
+        level: student.level || "N/A",
+        votes: votes,
+        // Individual category fields for the UI
+        presidential: student.presidential || "No Vote",
+        vice_president: student.vice_president || "No Vote",
+        financial_secretary: student.financial_secretary || "No Vote",
+        general_secretary: student.general_secretary || "No Vote",
+        general_organizers: student.general_organizers || "No Vote",
+        wocom: student.wocom || "No Vote",
+        pro: student.pro || "No Vote",
+        project_officer: student.project_officer || "No Vote"
+      }
     })
 
+    console.log(`Successfully transformed ${transformedData.length} student voting records`)
     return transformedData
 
   } catch (error) {
@@ -390,7 +317,74 @@ export async function getTransformedStudentData() {
     return []
   }
 }
+export async function generateVotingSummaryCSV() {
+  try {
+    const { data: votingSummary, error } = await supabase
+      .from("voted_students_summary")
+      .select("*")
+      .order("student_id")
 
+    if (error) {
+      console.error("Error fetching voting summary for CSV:", error)
+      return { success: false, message: "Failed to fetch voting data" }
+    }
+
+    if (!votingSummary || votingSummary.length === 0) {
+      return { success: false, message: "No voting data available" }
+    }
+
+    // Create CSV header
+    const headers = [
+      "Student ID", 
+      "Name", 
+      "Phone", 
+      "Email", 
+      "Programme", 
+      "Level",
+      "Presidential",
+      "Vice President", 
+      "Financial Secretary",
+      "General Secretary",
+      "General Organizers",
+      "WOCOM",
+      "PRO",
+      "Project Officer"
+    ]
+
+    // Create CSV rows
+    const csvRows = [
+      headers.join(","),
+      ...votingSummary.map(student => [
+        student.student_id,
+        `"${student.student_name || ""}"`,
+        student.phone || "",
+        student.email || "",
+        `"${student.programme || ""}"`,
+        student.level || "",
+        `"${student.presidential || "No Vote"}"`,
+        `"${student.vice_president || "No Vote"}"`,
+        `"${student.financial_secretary || "No Vote"}"`,
+        `"${student.general_secretary || "No Vote"}"`,
+        `"${student.general_organizers || "No Vote"}"`,
+        `"${student.wocom || "No Vote"}"`,
+        `"${student.pro || "No Vote"}"`,
+        `"${student.project_officer || "No Vote"}"`
+      ].join(","))
+    ]
+
+    const csvContent = csvRows.join("\n")
+    return { 
+      success: true, 
+      csvContent,
+      filename: `voting_summary_${new Date().toISOString().split("T")[0]}.csv`,
+      recordCount: votingSummary.length
+    }
+
+  } catch (error) {
+    console.error("Error generating CSV:", error)
+    return { success: false, message: "Failed to generate CSV" }
+  }
+}
 export async function generateResultsData() {
   const { data: results } = await supabase.from("voting_statistics").select("*").order("category_name, position")
 
